@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  page      Page[]
+  reel      Reel[]
+
+  @@index([email, id])
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  MODERATOR
+}
+
+model Page {
+  id          String    @id @unique
+  token       String
+  name        String
+  after       Int       @default(1)
+  active      Boolean
+  description String?
+  comment     String?
+  cStatus     Boolean
+  lPublish    DateTime?
+  nPublish    DateTime?
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reel        Reel[]
+  @@index([active, lPublish, nPublish, id])
+}
+
+model Reel {
+  id          String    @id @unique @default(uuid())
+  link        String    @unique
+  description String?
+  comment     String?
+  publish     DateTime?
+  status      Status
+  pageId      String
+  page        Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum Status {
+  PENDING
+  SCHEDULE
+  PUBLISH
+}
